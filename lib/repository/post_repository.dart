@@ -34,7 +34,6 @@ class PostRepository {
 
     final multipartImage = image;
 
-
     final response = await service.uploadPost(image: multipartImage, caption: caption, isLandscape: isLandscape);
 
 

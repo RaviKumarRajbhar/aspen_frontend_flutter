@@ -11,7 +11,6 @@ class CommentRepository {
 
   Future<List<CommentModel>> getComments(String postId ) async {
     final response = await service.getComments(postId);
-
     return response.map((e) => CommentModel.fromJson(e)).toList();
   }
 

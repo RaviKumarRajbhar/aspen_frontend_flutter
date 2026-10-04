@@ -16,6 +16,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class HomeScreenState extends ConsumerState<HomeScreen> {
+
   int _currentIndex = 0;
 
   final List<Widget> _screens = const [
@@ -31,37 +32,45 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Aspen App"),
+        title: const Text(
+          "Aspen",
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        centerTitle: false,
+        elevation: 0,
       ),
 
       body: _screens[_currentIndex],
 
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
+        currentIndex: _currentIndex >= 2
+            ? _currentIndex + 1
+            : _currentIndex,
 
         onTap: (index) async {
 
-    if (index == 2) {
+          if (index == 2) {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const CreatePostScreen(),
+              ),
+            );
 
-    await Navigator.push(
-    context,
-    MaterialPageRoute(
-    builder: (_) =>
-    const CreatePostScreen(),
-    ),
-    );
+            return;
+          }
 
-    return;
-    }
-
-    if (index > 2) {
-    index--;
-    }
-
-    setState(() {
-    _currentIndex = index;
-    });
-    },
+          setState(() {
+            if (index > 2) {
+              _currentIndex = index - 1;
+            } else {
+              _currentIndex = index;
+            }
+          });
+        },
 
         type: BottomNavigationBarType.fixed,
 
@@ -69,31 +78,45 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
 
         selectedItemColor: theme.primaryColor,
 
-        unselectedItemColor: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
+        unselectedItemColor:
+        theme.textTheme.bodyMedium?.color?.withValues(
+          alpha: 0.6,
+        ),
 
         selectedLabelStyle: const TextStyle(
-          fontWeight: FontWeight.w600),
+          fontWeight: FontWeight.w600,
+        ),
 
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: "Home"),
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home),
+            label: "Home",
+          ),
 
           BottomNavigationBarItem(
-            icon: Icon(Icons.search),
-            label: "Search"),
+            icon: Icon(Icons.search_outlined),
+            activeIcon: Icon(Icons.search),
+            label: "Search",
+          ),
 
           BottomNavigationBarItem(
-            icon: Icon(Icons.add_box),
-            label: "Post"),
+            icon: Icon(Icons.add_box_outlined),
+            activeIcon: Icon(Icons.add_box),
+            label: "Post",
+          ),
 
           BottomNavigationBarItem(
-            icon: Icon(Icons.message),
-            label: "Messages"),
+            icon: Icon(Icons.message_outlined),
+            activeIcon: Icon(Icons.message),
+            label: "Messages",
+          ),
 
           BottomNavigationBarItem(
-            icon: Icon(Icons.account_circle),
-            label: "Account"),
+            icon: Icon(Icons.account_circle_outlined),
+            activeIcon: Icon(Icons.account_circle),
+            label: "Account",
+          ),
         ],
       ),
     );

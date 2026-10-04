@@ -5,7 +5,6 @@ import 'package:aspen_app/token_storage.dart';
 import 'package:dio/dio.dart';
 
 class AuthInterceptor extends Interceptor {
-
   final TokenStorage _tokenStorage;
   final AuthService authService;
   final Dio dio;
@@ -17,16 +16,20 @@ class AuthInterceptor extends Interceptor {
       );
 
   bool isRefreshing = false;
+
   final List<_QueuedRequest> requestQueue = [];
 
-
   @override
-  Future<void> onRequest( RequestOptions options, RequestInterceptorHandler handler) async {
-
-    final isRefreshApi = options.path.contains("/refresh");
+  Future<void> onRequest(
+      RequestOptions options,
+      RequestInterceptorHandler handler,
+      ) async {
+    final isRefreshApi =
+    options.path.contains("/refresh");
 
     if (!isRefreshApi) {
-      final token = await _tokenStorage.getAccessToken();
+      final token =
+      await _tokenStorage.getAccessToken();
 
       if (token != null) {
         options.headers["Authorization"] =
@@ -37,43 +40,54 @@ class AuthInterceptor extends Interceptor {
     handler.next(options);
   }
 
-
   @override
-  Future<void> onError( DioException err, ErrorInterceptorHandler handler) async {
+  Future<void> onError(
+      DioException err,
+      ErrorInterceptorHandler handler,
+      ) async {
+    final statusCode =
+        err.response?.statusCode;
 
-    final statusCode = err.response?.statusCode;
-
-    // logic still not complete and correct needs correction
     if (statusCode != 401 && statusCode != 403) {
       return handler.next(err);
     }
 
-    final requestOptions = err.requestOptions;
+    final requestOptions =
+        err.requestOptions;
 
     if (requestOptions.path.contains("/refresh")) {
-
       await _tokenStorage.deleteAccessToken();
       await _tokenStorage.deleteRefreshToken();
+      await _tokenStorage.deleteUserId();
 
       return handler.reject(err);
     }
 
+    final completer =
+    Completer<Response>();
 
-    final completer = Completer<Response>();
-
-    requestQueue.add(_QueuedRequest(requestOptions,completer));
-
+    requestQueue.add(
+      _QueuedRequest(
+        requestOptions,
+        completer,
+      ),
+    );
 
     if (isRefreshing) {
-
-      return completer.future.then((response) {
+      return completer.future.then(
+            (response) {
           handler.resolve(response);
         },
-
         onError: (e) {
-          if (e is DioException) { handler.reject(e);
+          if (e is DioException) {
+            handler.reject(e);
           } else {
-            handler.reject(DioException(requestOptions: requestOptions,error: e));
+            handler.reject(
+              DioException(
+                requestOptions: requestOptions,
+                error: e,
+              ),
+            );
           }
         },
       );
@@ -82,61 +96,81 @@ class AuthInterceptor extends Interceptor {
     isRefreshing = true;
 
     try {
-      final oldRefreshToken = await _tokenStorage.getRefreshToken();
+      final oldRefreshToken =
+      await _tokenStorage.getRefreshToken();
 
       if (oldRefreshToken == null) {
-        throw Exception("Refresh token missing");
+        throw Exception(
+          "Refresh token missing",
+        );
       }
+
       print("Refreshing token...");
 
-      final newTokens = await authService.refreshToken(oldRefreshToken);
+      final newTokens =
+      await authService.refreshToken(
+        oldRefreshToken,
+      );
 
-      final accessToken = newTokens.data["accessToken"];
-      final refreshToken = newTokens.data["refreshToken"];
+      final accessToken =
+      newTokens.data["accessToken"];
 
-      await _tokenStorage.saveAccessToken(accessToken);
-      await _tokenStorage.saveRefreshToken(refreshToken);
+      final refreshToken =
+      newTokens.data["refreshToken"];
+
+      await _tokenStorage.saveAccessToken(
+        accessToken,
+      );
+
+      await _tokenStorage.saveRefreshToken(
+        refreshToken,
+      );
 
       print("Token refreshed successfully");
 
-      for (final queuedRequest in requestQueue) {
+      for (final queuedRequest
+      in requestQueue) {
         try {
+          final response = await _retry(
+            queuedRequest.requestOptions,
+          );
 
-          final response = await _retry(queuedRequest.requestOptions);
-          queuedRequest.completer.complete(response);
-
+          queuedRequest.completer
+              .complete(response);
         } catch (e) {
-          queuedRequest.completer.completeError(e);
+          queuedRequest.completer
+              .completeError(e);
         }
       }
 
       requestQueue.clear();
 
       return completer.future.then(
-
             (response) {
-
           handler.resolve(response);
         },
-
         onError: (e) {
-
           if (e is DioException) {
             handler.reject(e);
           } else {
             handler.reject(
-              DioException( requestOptions: requestOptions, error: e),
+              DioException(
+                requestOptions: requestOptions,
+                error: e,
+              ),
             );
           }
         },
       );
-
     } catch (e) {
 
-      for (final queuedRequest in requestQueue) {
+      await _tokenStorage.deleteAccessToken();
+      await _tokenStorage.deleteRefreshToken();
+      await _tokenStorage.deleteUserId();
 
+      for (final queuedRequest
+      in requestQueue) {
         queuedRequest.completer.completeError(
-
           DioException(
             requestOptions:
             queuedRequest.requestOptions,
@@ -148,19 +182,19 @@ class AuthInterceptor extends Interceptor {
       requestQueue.clear();
 
       return handler.reject(err);
-
     } finally {
-
       isRefreshing = false;
     }
   }
 
-  Future<Response> _retry(RequestOptions requestOptions) async {
+  Future<Response> _retry(
+      RequestOptions requestOptions,
+      ) async {
+    final token =
+    await _tokenStorage.getAccessToken();
 
-    final token = await _tokenStorage.getAccessToken();
-
-    final options = requestOptions.copyWith(
-
+    final options =
+    requestOptions.copyWith(
       headers: {
         ...requestOptions.headers,
         "Authorization":
@@ -173,11 +207,11 @@ class AuthInterceptor extends Interceptor {
 }
 
 class _QueuedRequest {
-
   final RequestOptions requestOptions;
-
   final Completer<Response> completer;
 
-  _QueuedRequest(this.requestOptions,this.completer);
-
+  _QueuedRequest(
+      this.requestOptions,
+      this.completer,
+      );
 }

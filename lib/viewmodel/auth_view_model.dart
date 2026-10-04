@@ -1,80 +1,123 @@
-
 import 'package:aspen_app/repository/auth_repository.dart';
 import 'package:aspen_app/states/auth_state.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final authViewModelProvider = StateNotifierProvider<AuthViewModel, AuthState> ((ref) {
-  final authRepository = ref.read(authRepositoryProvider);
+final authViewModelProvider =
+StateNotifierProvider<AuthViewModel, AuthState>((ref) {
+  final authRepository =
+  ref.read(authRepositoryProvider);
+
   return AuthViewModel(authRepository);
 });
 
-class AuthViewModel extends StateNotifier<AuthState>{
-
+class AuthViewModel extends StateNotifier<AuthState> {
   final AuthRepository repo;
 
-  AuthViewModel(this.repo):super(AuthState.initial()) {
+  AuthViewModel(this.repo)
+      : super(AuthState.initial()) {
     checkAuth();
   }
 
+  // =========================
+  // GOOGLE LOGIN
+  // =========================
+
   Future<void> googleLogin() async {
-
     try {
+      final response =
+      await repo.oauthGoogleLogin();
 
-      final response = await repo.oauthGoogleLogin();
-
-      if ( response.success ) {
-
+      if (response.success) {
         state = state.copyWith(
-              status: AuthStatus.authenticated,
-              error:null,
-            );
+          status: AuthStatus.authenticated,
+          error: null,
+        );
+      } else {
+        state = state.copyWith(
+          status: AuthStatus.unauthenticated,
+          error: response.error,
+        );
       }
-
-      else {
-        state = state.copyWith( status: AuthStatus.unauthenticated, error:response.error);
-      }
-
-    }
-
-    catch (e) {
-      state = state.copyWith(status: AuthStatus.unauthenticated,error: "Google login failed");
+    } catch (e) {
+      state = state.copyWith(
+        status: AuthStatus.unauthenticated,
+        error: "Google login failed",
+      );
     }
   }
 
+  // =========================
+  // CHECK AUTH
+  // =========================
+
   Future<void> checkAuth() async {
+    final refreshToken =
+    await repo.getRefreshToken();
 
-    final token = await repo.getRefreshToken();
-
-    if(token != null){
-      state = state.copyWith(status: AuthStatus.authenticated);
+    if (refreshToken != null) {
+      state = state.copyWith(
+        status: AuthStatus.authenticated,
+      );
     } else {
-      state = state.copyWith(status: AuthStatus.unauthenticated);
+      state = state.copyWith(
+        status: AuthStatus.unauthenticated,
+      );
     }
-   }
+  }
 
-   Future<void> login(String email , String password) async {
+  // =========================
+  // NORMAL LOGIN
+  // =========================
 
+  Future<void> login(
+      String email,
+      String password,
+      ) async {
     try {
-      final response = await repo.login(email, password);
+      final response =
+      await repo.login(email, password);
 
-      if(response.success) {
-        state = state.copyWith(status: AuthStatus.authenticated);
+      if (response.success) {
+        state = state.copyWith(
+          status: AuthStatus.authenticated,
+          error: null,
+        );
       } else {
-        state = state.copyWith(status: AuthStatus.unauthenticated , error: response.error);
+        state = state.copyWith(
+          status: AuthStatus.unauthenticated,
+          error: response.error,
+        );
       }
     } catch (e) {
-      state = state.copyWith(status : AuthStatus.unauthenticated , error: "Something went wrong");
+      state = state.copyWith(
+        status: AuthStatus.unauthenticated,
+        error: "Something went wrong",
+      );
     }
+  }
 
-   }
+  // =========================
+  // LOGOUT
+  // =========================
 
-   Future<void> logout() async {
-    await repo.deleteRefreshToken();
-    await repo.deleteAccessToken();
-    state = state.copyWith(status: AuthStatus.unauthenticated);
-   }
+  Future<void> logout() async {
+    await repo.logout();
 
-   Future<void> register(String username , String email , String password) async {
-    // make registration here
-   }
+    state = state.copyWith(
+      status: AuthStatus.unauthenticated,
+      error: null,
+    );
+  }
+
+  // =========================
+  // REGISTER
+  // =========================
+
+  Future<void> register(
+      String username,
+      String email,
+      String password,
+      ) async {
+    // Registration flow later
+  }
 }

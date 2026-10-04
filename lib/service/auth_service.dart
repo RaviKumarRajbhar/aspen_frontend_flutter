@@ -1,27 +1,19 @@
 import 'package:aspen_app/dio/auth_client.dart';
-import 'package:aspen_app/service/google_auth_service.dart';
-import 'package:aspen_app/token_storage.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../model/api_response.dart';
 
 class AuthService {
 
-
   final Dio dio;
 
   AuthService(this.dio);
 
 
-  final Dio refreshDio = Dio(
-    BaseOptions( baseUrl: "http://localhost:8080/auth")
-  );
+  final Dio refreshDio = Dio(BaseOptions( baseUrl: "http://localhost:8080/auth"));
 
-  Future<Response> refreshToken(
-      String refreshToken,
-      ) async {
+  Future<Response> refreshToken( String refreshToken) async {
 
     return await refreshDio.post("/refresh",
       data: {
@@ -41,16 +33,13 @@ class AuthService {
       );
 
       return ApiResponse( success: true, data: response.data);
-
     } catch (e) {
-
       return ApiResponse( success: false, error: e.toString(),
       );
     }
   }
 
-  Future<ApiResponse<Map<String, dynamic>>> login(String email,
-      String password) async {
+  Future<ApiResponse<Map<String, dynamic>>> login(String email, String password) async {
     try {
       final response = await dio.post("/login",
           data: {
