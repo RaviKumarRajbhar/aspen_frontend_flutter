@@ -13,6 +13,7 @@ The project is currently under active development and new features are being add
 * Create and View Posts
 * Like Posts
 * Comment on Posts
+* One-to-One Chat
 * Push Notifications (Firebase Cloud Messaging)
 * Account/Profile Details Screen
 * Image Selection and Upload Support
@@ -43,6 +44,7 @@ Implemented:
 * Authentication System
 * Feed Screen
 * Like and Comment Functionality
+* One-to-One Chat Functionality
 * Push Notifications
 * Profile Details Screen
 
@@ -77,4 +79,3 @@ flutter run
 ## Note
 
 This repository contains only the frontend implementation. The backend is maintained separately.
-
