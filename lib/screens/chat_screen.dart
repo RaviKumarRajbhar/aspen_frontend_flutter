@@ -30,11 +30,9 @@ class ChatScreen extends ConsumerStatefulWidget {
 
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final ScrollController _scrollController = ScrollController();
-
   final ChatWebSocketService _webSocketService = ChatWebSocketService();
 
   String? currentUserId;
-
   bool _isInitialLoading = true;
 
   @override
@@ -55,6 +53,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       await _loadInitialMessages();
 
       if (!mounted) return;
+
       ref
           .read(conversationViewModelProvider.notifier)
           .markConversationAsRead(widget.otherUserId);
@@ -68,6 +67,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Future<void> _loadCurrentUserId() async {
     final tokenStorage = ref.read(tokenStorageProvider);
     final userId = await tokenStorage.getUserId();
+
     if (!mounted) return;
 
     setState(() {
@@ -95,29 +95,33 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         try {
           final json = jsonDecode(data);
 
-          final message = ChatMessage.fromJson(Map<String, dynamic>.from(json));
+          final message =
+          ChatMessage.fromJson(Map<String, dynamic>.from(json));
 
-          final chatViewModel = ref.read(chatViewModelProvider.notifier);
+          final chatViewModel =
+          ref.read(chatViewModelProvider.notifier);
 
           if (message.status == MessageStatus.seen) {
-            chatViewModel.updateMessageStatus( message.id, MessageStatus.seen);
+            chatViewModel.updateMessageStatus(
+              message.id,
+              MessageStatus.seen,
+            );
           } else {
-
             chatViewModel.addIncomingMessage(message);
-             ref.read(conversationViewModelProvider.notifier)
+
+            ref
+                .read(conversationViewModelProvider.notifier)
                 .markConversationAsRead(widget.otherUserId);
           }
         } catch (e) {
-          print(
-            "WEBSOCKET MESSAGE PARSE ERROR: $e",
-          );
+          print("Error :$e");
         }
       },
       onError: (error) {
-        print("WEBSOCKET ERROR: $error");
+        print("Error: $error");
       },
       onDone: () {
-        print("WEBSOCKET CLOSED");
+        print("connection closed");
       },
     );
   }
@@ -125,7 +129,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Future<void> _loadInitialMessages() async {
     final viewModel = ref.read(chatViewModelProvider.notifier);
 
-    await viewModel.loadMessages( widget.otherUserId );
+    await viewModel.loadMessages(widget.otherUserId);
 
     if (!mounted) return;
 
@@ -148,6 +152,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_scrollController.hasClients) return;
+
       _scrollController.jumpTo(0);
 
       _isInitialLoading = false;
@@ -171,8 +176,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     if (position.maxScrollExtent <= 0) return;
 
-    if (position.pixels >=
-        position.maxScrollExtent - 100) {
+    if (position.pixels >= position.maxScrollExtent - 100) {
       _loadMoreMessages();
     }
   }
@@ -207,14 +211,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           children: [
             CircleAvatar(
               radius: 20,
-              backgroundColor:
-              const Color(0xFFE8F7F0),
+              backgroundColor: const Color(0xFFE8F7F0),
               backgroundImage:
               widget.profileUrl != null &&
                   widget.profileUrl!.isNotEmpty
-                  ? NetworkImage(
-                widget.profileUrl!,
-              )
+                  ? NetworkImage(widget.profileUrl!)
                   : null,
               child: widget.profileUrl == null ||
                   widget.profileUrl!.isEmpty
@@ -224,9 +225,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               )
                   : null,
             ),
-
             const SizedBox(width: 12),
-
             Expanded(
               child: Text(
                 widget.username,
@@ -240,7 +239,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ],
         ),
       ),
-
       body: Column(
         children: [
           Expanded(
@@ -249,7 +247,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               child: _buildMessageList(state),
             ),
           ),
-
           ChatInput(
             onSend: (message) {
               _webSocketService.sendMessage(
@@ -275,17 +272,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     if (state.status == ChatStatus.error &&
         state.messages.isEmpty) {
       return ListView(
-        physics:
-        const AlwaysScrollableScrollPhysics(),
+        physics: const AlwaysScrollableScrollPhysics(),
         children: [
           SizedBox(
-            height:
-            MediaQuery.of(context).size.height *
-                0.7,
+            height: MediaQuery.of(context).size.height * 0.7,
             child: Center(
               child: Text(
-                state.error ??
-                    "Something went wrong",
+                state.error ?? "Something went wrong",
               ),
             ),
           ),
@@ -295,15 +288,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     if (state.messages.isEmpty) {
       return ListView(
-        physics:
-        const AlwaysScrollableScrollPhysics(),
+        physics: const AlwaysScrollableScrollPhysics(),
         children: const [
           SizedBox(
             height: 500,
             child: Center(
-              child: Text(
-                "No messages yet",
-              ),
+              child: Text("No messages yet"),
             ),
           ),
         ],
@@ -315,15 +305,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         ListView.builder(
           controller: _scrollController,
           reverse: true,
-          physics:
-          const AlwaysScrollableScrollPhysics(),
+          physics: const AlwaysScrollableScrollPhysics(),
           itemCount: state.messages.length,
           itemBuilder: (context, index) {
-            final message =
-            state.messages[index];
+            final message = state.messages[index];
 
-            final isMine =
-                message.senderId == currentUserId;
+            final isMine = message.senderId == currentUserId;
 
             return MessageBubble(
               message: message,
@@ -331,7 +318,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             );
           },
         ),
-
         if (state.loadingMore)
           const Positioned(
             top: 10,

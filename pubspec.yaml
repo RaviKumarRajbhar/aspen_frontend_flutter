@@ -54,7 +54,19 @@ dependencies:
   
   google_sign_in: ^6.2.1
 
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/aspen_logo.png"
+
+  adaptive_icon_foreground: "assets/icon/aspen_logo.png"
+
+
+
 dev_dependencies:
+
+  flutter_launcher_icons: ^0.14.4
+
   flutter_test:
     sdk: flutter
 
@@ -75,6 +87,9 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  assets:
+    - assets/icon/google_logo.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:

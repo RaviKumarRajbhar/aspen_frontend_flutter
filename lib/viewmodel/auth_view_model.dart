@@ -4,8 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final authViewModelProvider =
 StateNotifierProvider<AuthViewModel, AuthState>((ref) {
-  final authRepository =
-  ref.read(authRepositoryProvider);
+  final authRepository = ref.read(authRepositoryProvider);
 
   return AuthViewModel(authRepository);
 });
@@ -13,19 +12,13 @@ StateNotifierProvider<AuthViewModel, AuthState>((ref) {
 class AuthViewModel extends StateNotifier<AuthState> {
   final AuthRepository repo;
 
-  AuthViewModel(this.repo)
-      : super(AuthState.initial()) {
+  AuthViewModel(this.repo) : super(AuthState.initial()) {
     checkAuth();
   }
 
-  // =========================
-  // GOOGLE LOGIN
-  // =========================
-
   Future<void> googleLogin() async {
     try {
-      final response =
-      await repo.oauthGoogleLogin();
+      final response = await repo.oauthGoogleLogin();
 
       if (response.success) {
         state = state.copyWith(
@@ -46,13 +39,8 @@ class AuthViewModel extends StateNotifier<AuthState> {
     }
   }
 
-  // =========================
-  // CHECK AUTH
-  // =========================
-
   Future<void> checkAuth() async {
-    final refreshToken =
-    await repo.getRefreshToken();
+    final refreshToken = await repo.getRefreshToken();
 
     if (refreshToken != null) {
       state = state.copyWith(
@@ -65,17 +53,15 @@ class AuthViewModel extends StateNotifier<AuthState> {
     }
   }
 
-  // =========================
-  // NORMAL LOGIN
-  // =========================
-
   Future<void> login(
       String email,
       String password,
       ) async {
     try {
-      final response =
-      await repo.login(email, password);
+      final response = await repo.login(
+        email,
+        password,
+      );
 
       if (response.success) {
         state = state.copyWith(
@@ -96,10 +82,6 @@ class AuthViewModel extends StateNotifier<AuthState> {
     }
   }
 
-  // =========================
-  // LOGOUT
-  // =========================
-
   Future<void> logout() async {
     await repo.logout();
 
@@ -109,15 +91,79 @@ class AuthViewModel extends StateNotifier<AuthState> {
     );
   }
 
-  // =========================
-  // REGISTER
-  // =========================
-
   Future<void> register(
       String username,
       String email,
       String password,
       ) async {
-    // Registration flow later
+    state = state.copyWith(
+      status: AuthStatus.loading,
+      error: null,
+    );
+
+    try {
+      final response = await repo.register(
+        username,
+        email,
+        password,
+      );
+
+      if (response.success) {
+        state = state.copyWith(
+          status: AuthStatus.unauthenticated,
+          error: null,
+        );
+      } else {
+        state = state.copyWith(
+          status: AuthStatus.unauthenticated,
+          error: response.error,
+        );
+      }
+    } catch (e) {
+      state = state.copyWith(
+        status: AuthStatus.unauthenticated,
+        error: "Registration failed",
+      );
+    }
+  }
+
+  Future<bool> verifyOtp(
+      String email,
+      String otp,
+      ) async {
+    state = state.copyWith(
+      status: AuthStatus.loading,
+      error: null,
+    );
+
+    try {
+      final response = await repo.verifyOtp(
+        email,
+        otp,
+      );
+
+      if (response.success) {
+        state = state.copyWith(
+          status: AuthStatus.authenticated,
+          error: null,
+        );
+
+        return true;
+      }
+
+      state = state.copyWith(
+        status: AuthStatus.unauthenticated,
+        error: response.error,
+      );
+
+      return false;
+    } catch (e) {
+      state = state.copyWith(
+        status: AuthStatus.unauthenticated,
+        error: "OTP verification failed",
+      );
+
+      return false;
+    }
   }
 }

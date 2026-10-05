@@ -72,7 +72,6 @@ class OtherUserProfileScreen extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // Username + bio
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Column(

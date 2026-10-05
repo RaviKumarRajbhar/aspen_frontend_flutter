@@ -186,8 +186,7 @@ class AuthRepository {
       String password,
       ) async {
     try {
-      final response =
-      await authService.register(
+      final response = await authService.register(
         username,
         email,
         password,
@@ -202,9 +201,78 @@ class AuthRepository {
 
       return ApiResponse(success: true);
     } catch (e) {
-      return ApiResponse(success: false, error: "Something went wrong");
+      return ApiResponse(
+        success: false,
+        error: "Something went wrong",
+      );
     }
   }
+
+  Future<ApiResponse<void>> verifyOtp(
+      String email,
+      String otp,
+      ) async {
+    try {
+      final response = await authService.verifyOtp(
+        email,
+        otp,
+      );
+
+      if (!response.success) {
+        return ApiResponse(
+          success: false,
+          error: response.error,
+        );
+      }
+
+      final accessToken =
+      response.data?["accessToken"];
+
+      final refreshToken =
+      response.data?["refreshToken"];
+
+      if (accessToken == null || refreshToken == null) {
+        return ApiResponse(
+          success: false,
+          error: "Invalid Server Response",
+        );
+      }
+
+      await _tokenStorage.saveAccessToken(
+        accessToken,
+      );
+
+      await _tokenStorage.saveRefreshToken(
+        refreshToken,
+      );
+
+      final decodedToken =
+      JwtDecoder.decode(accessToken);
+
+      final userId =
+      decodedToken["sub"]?.toString();
+
+      if (userId == null || userId.isEmpty) {
+        return ApiResponse(
+          success: false,
+          error: "Invalid User Token",
+        );
+      }
+
+      await _tokenStorage.saveUserId(userId);
+
+      await deviceService.registerDeviceToken();
+
+      return ApiResponse(success: true);
+
+    } catch (e) {
+      return ApiResponse(
+        success: false,
+        error: "Something went wrong",
+      );
+    }
+  }
+
 }
 
 

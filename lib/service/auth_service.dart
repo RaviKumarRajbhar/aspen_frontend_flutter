@@ -22,19 +22,39 @@ class AuthService {
     );
   }
 
-  Future<ApiResponse<Map<String,dynamic>>> googleLogin(String idToken ) async {
-
+  Future<ApiResponse<Map<String, dynamic>>> googleLogin(String idToken) async {
     try {
-
-      final response = await dio.post( "/google",
+      final response = await dio.post(
+        "/google",
         data: {
           "idToken": idToken,
         },
       );
 
-      return ApiResponse( success: true, data: response.data);
+      return ApiResponse(
+        success: true,
+        data: response.data,
+      );
+
+    } on DioException catch (e) {
+      final data = e.response?.data;
+
+      String message = "Google login failed";
+
+      if (data is Map) {
+        message = data["error"]?.toString()
+            ?? data["message"]?.toString()
+            ?? "Google login failed";
+      }
+
+      return ApiResponse(
+        success: false,
+        error: message,
+      );
     } catch (e) {
-      return ApiResponse( success: false, error: e.toString(),
+      return ApiResponse(
+        success: false,
+        error: "Google login failed",
       );
     }
   }
@@ -60,19 +80,91 @@ class AuthService {
   }
 
 
-  Future<ApiResponse<Map<String, dynamic>>> register(String name, String email,
-      String password) async {
+  Future<ApiResponse<Map<String, dynamic>>> register(
+      String name,
+      String email,
+      String password,
+      ) async {
     try {
-      final response = await dio.post("/register",
-          data: {
-            "name": name,
-            "email": email,
-            "password": password
-          });
+      final response = await dio.post(
+        "/register/initiate",
+        data: {
+          "username": name,
+          "email": email,
+          "password": password,
+        },
+      );
 
-      return ApiResponse(success: true, data: response.data);
+      return ApiResponse(
+        success: true,
+        data: {
+          "message": response.data,
+        },
+      );
+    } on DioException catch (e) {
+      final data = e.response?.data;
+
+      String message = "Registration failed";
+
+      if (data is Map) {
+        message = data["message"]?.toString()
+            ?? data["error"]?.toString()
+            ?? "Registration failed";
+      } else if (data is String) {
+        message = data;
+      }
+
+      return ApiResponse(
+        success: false,
+        error: message,
+      );
     } catch (e) {
-      return ApiResponse(success: false, error: e.toString());
+      return ApiResponse(
+        success: false,
+        error: "Registration failed",
+      );
+    }
+  }
+
+  Future<ApiResponse<Map<String, dynamic>>> verifyOtp(
+      String email,
+      String otp,
+      ) async {
+    try {
+      final response = await dio.post(
+        "/register/verify",
+        data: {
+          "email": email,
+          "otp": otp,
+        },
+      );
+
+      return ApiResponse(
+        success: true,
+        data: response.data,
+      );
+    } on DioException catch (e) {
+      final data = e.response?.data;
+
+      String message = "OTP verification failed";
+
+      if (data is Map) {
+        message = data["message"]?.toString()
+            ?? data["error"]?.toString()
+            ?? "OTP verification failed";
+      } else if (data is String) {
+        message = data;
+      }
+
+      return ApiResponse(
+        success: false,
+        error: message,
+      );
+    } catch (e) {
+      return ApiResponse(
+        success: false,
+        error: "OTP verification failed",
+      );
     }
   }
 

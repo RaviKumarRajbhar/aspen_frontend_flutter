@@ -33,9 +33,6 @@ class ChatViewModel extends StateNotifier<ChatState> {
       }
 
       final history = response.data!;
-
-      // Backend sends newest -> oldest.
-      // Keep this order because ChatScreen uses reverse:true.
       final messages = history.messages.toList();
 
       state = state.copyWith(
@@ -55,7 +52,6 @@ class ChatViewModel extends StateNotifier<ChatState> {
     }
   }
 
-  // NEW: Add incoming WebSocket message to chat.
   void addIncomingMessage(ChatMessage message) {
     state = state.copyWith(
       messages: [
@@ -113,14 +109,8 @@ class ChatViewModel extends StateNotifier<ChatState> {
 
       final history = response.data!;
 
-      // Backend sends older messages in newest -> oldest order.
       final olderMessages = history.messages.toList();
 
-      // Current state:
-      //
-      // [newest -> oldest]
-      //
-      // Older messages need to be appended at the END.
       final updatedMessages = [
         ...state.messages,
         ...olderMessages,

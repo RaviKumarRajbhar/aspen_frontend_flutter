@@ -9,10 +9,6 @@ class TokenStorage {
   static const String _access = "access_token";
   static const String _userId = "user_id";
 
-  // =========================
-  // ACCESS TOKEN
-  // =========================
-
   Future<void> saveAccessToken(String token) async {
     await _storage.write(
       key: _access,
@@ -32,10 +28,6 @@ class TokenStorage {
     );
   }
 
-  // =========================
-  // REFRESH TOKEN
-  // =========================
-
   Future<void> saveRefreshToken(String token) async {
     await _storage.write(
       key: _refresh,
@@ -54,10 +46,6 @@ class TokenStorage {
       key: _refresh,
     );
   }
-
-  // =========================
-  // USER ID
-  // =========================
 
   Future<void> saveUserId(String userId) async {
     await _storage.write(

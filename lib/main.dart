@@ -6,13 +6,31 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/theme/app_theme.dart';
 
-void main() async {
+Future<void> _firebaseMessagingBackgroundHandler(
+    RemoteMessage message) async {
+  await Firebase.initializeApp();
+}
 
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp();
 
+  FirebaseMessaging.onBackgroundMessage(
+    _firebaseMessagingBackgroundHandler,
+  );
+
+  await FirebaseMessaging.instance.requestPermission(
+    alert: true,
+    badge: true,
+    sound: true,
+  );
+
   await FirebaseMessaging.instance.getToken();
+
+  FirebaseMessaging.onMessage.listen((RemoteMessage message) {});
+
+  FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {});
 
   runApp(
     const ProviderScope(
@@ -22,12 +40,10 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
-
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       darkTheme: AppTheme.darkTheme,
